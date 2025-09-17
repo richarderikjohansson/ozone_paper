@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [project.scripts]
-mira2 = "ozone.cli:cli"
+m2 = "ozone.cli:cli"
 
 [build-system]
 requires = ["setuptools>=61"]

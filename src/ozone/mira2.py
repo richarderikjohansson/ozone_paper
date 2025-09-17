@@ -5,7 +5,16 @@ import numpy as np
 from datetime import datetime
 
 
-def exportdir():
+def exportdir() -> Path:
+    """Function that returns export directory
+
+    This function will create the directory "export"
+    within the code-base if it does not exist and will
+    return this path
+
+    Returns:
+       Absolute path to the export directory
+    """
     filedir = Path(__file__).resolve()
     ddir = filedir.parent / "data"
     edir = ddir / "export"
@@ -15,7 +24,20 @@ def exportdir():
     return edir
 
 
-def make_datetime(measure):
+def make_datetime(measure: h5py._hl.group.Group) -> datetime:
+    """Function to make datetime objects
+
+    This function takes the measurement dataset
+    and parses the start and end times of the
+    measurements. It will return the datetime
+    in the middle of the measurement
+
+    Args:
+        measure: dataset containing measurement data
+
+    Returns:
+        middle of the measurement datetime
+    """
     start_year, end_year = (
         measure["start_year"][()].decode(),
         measure["end_year"][()].decode(),
@@ -52,15 +74,41 @@ def make_datetime(measure):
     mid = start + delta / 2
     return mid
 
-def calculate_mr(retrieval):
+
+def calculate_mr(retrieval: h5py._hl.group.Group) -> np.ndarray:
+    """Function to calculate the measurement response
+
+    This function takes the retrieval dataset and
+    calculates the measurement response from the
+    averaging kernel matrix by summing the AK's
+    rows
+
+    Args:
+        retrieval: Dataset containing retrieval data
+
+    Returns:
+        Measurement response
+    """
     mr = []
     for row in retrieval["avk"][()][0:41, 0:41]:
         mr.append(sum(row))
-    return mr
+    return np.array(mr)
 
 
 class MIRA2FindAndMake:
+    """
+    Class to find all the MIRA2 files, and to create
+    two new files containing relevant measurement and
+    retrieval data.
+    """
+
     def __init__(self, root: str, make: bool):
+        """Init constructor
+
+        Args:
+            root: Path to the directory with MIRA2 files
+            make: [TODO:description]
+        """
         self.KEY = "MIRA2_O3_v_1"
         self.root = Path(root)
         self.find_mira2()
@@ -69,6 +117,14 @@ class MIRA2FindAndMake:
             self.makeproducts()
 
     def find_mira2(self):
+        """Method to locate all MIRA2 files
+
+        This method recursively searches the root path
+        given for .hdf5 files. It also checks that the
+        file is containing a retrieval, and that this
+        retrieval have converged from the metadata written
+        to the file.
+        """
         files = self.root.rglob(pattern="*.hdf5")
         retfiles = []
 
@@ -84,6 +140,18 @@ class MIRA2FindAndMake:
         self.retfiles = retfiles
 
     def makeproducts(self):
+        """Method to create new files
+
+        This method is extracting all relevant data from the
+        measurement and retrieval for the files found with
+        retrieval data. It then places this data in two
+        dictionaries with the datetime as a top level key
+        for each set of data.
+
+        It finally saves these two dictionaries in the export
+        directory under 'measure.npy' and 'retrieval.npy' for
+        the measurement and retrieval data respectively
+        """
         edir = exportdir()
         mdict = {}
         rdict = {}

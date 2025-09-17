@@ -1,5 +1,5 @@
 from .arts import Ycalc
-from .io import MIRA2FindAndMake
+from .mira2 import MIRA2FindAndMake
 
 
 def cli_commands():
