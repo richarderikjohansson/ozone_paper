@@ -1,14 +1,18 @@
 from .arts import Ycalc
 from .mira2 import MIRA2FindAndMake
+from .mls import MLSFindAndMake
 
 
 def cli_commands():
-
     # will add more
     commands = {"arts": Ycalc,
-                "m2make": MIRA2FindAndMake}
+                "m2make": MIRA2FindAndMake,
+                "mlsmake": MLSFindAndMake, }
 
-    desc = {"arts": "Used for making simulations with pyarts",
-            "m2make": "Used to find MIRA2 files from a path and make product files"}
+    desc = {
+        "arts": "Used for making simulations with pyarts",
+        "m2make": "Used to find MIRA2 files and make product files",
+        "mlsmake": "Used to find MLS files and make new file with product"
+    }
 
     return commands, desc

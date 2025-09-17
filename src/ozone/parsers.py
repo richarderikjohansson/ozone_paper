@@ -42,3 +42,23 @@ def m2make_parser(subparser):
         action="store_true",
         help="Whether to create files for each product"
     )
+
+
+def mlsmake_parser(subparser):
+    subparser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="Root directory where product data is located"
+    )
+    subparser.add_argument(
+        "--make",
+        action="store_true",
+        help="Whether to create a file for the product"
+    )
+    subparser.add_argument(
+        "--radii",
+        type=int,
+        default=200,
+        help="Whether to create a file for the product"
+    )

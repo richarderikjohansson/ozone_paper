@@ -40,12 +40,12 @@ class Ycalc:
         self.arts.f_grid = np.linspace(self.start, self.end, self.nf)
         self.arts.abs_speciesSet(
             species=[
-                f"O2-*-{self.start - 1}-{self.end + 1}",
-                #f"O3-*-{self.start - 1}-{self.end + 1}",
-                #f"N2O-*-{self.start -1}-{self.end + 1}",
-                #f"HNO3-*-{self.start - 1}-{self.end + 1}",
-                #"H2O-PWR98",
-                #f"H2O-*-{self.start -1}-{self.end + 1}"
+                f"O2-Z-*-{self.start - 1}-{self.end + 1}",
+                f"O3-*-{self.start - 1}-{self.end + 1}",
+                f"N2O-*-{self.start - 1}-{self.end + 1}",
+                f"HNO3-*-{self.start - 1}-{self.end + 1}",
+                "H2O-PWR98",
+                f"H2O-*-{self.start - 1}-{self.end + 1}"
             ]
         )
         self.arts.Wigner6Init()

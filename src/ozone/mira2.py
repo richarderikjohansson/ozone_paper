@@ -3,25 +3,7 @@ import h5py
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime
-
-
-def exportdir() -> Path:
-    """Function that returns export directory
-
-    This function will create the directory "export"
-    within the code-base if it does not exist and will
-    return this path
-
-    Returns:
-       Absolute path to the export directory
-    """
-    filedir = Path(__file__).resolve()
-    ddir = filedir.parent / "data"
-    edir = ddir / "export"
-    if not edir.exists():
-        edir.mkdir()
-
-    return edir
+from .io import exportdir
 
 
 def make_datetime(measure: h5py._hl.group.Group) -> datetime:
@@ -107,7 +89,7 @@ class MIRA2FindAndMake:
 
         Args:
             root: Path to the directory with MIRA2 files
-            make: [TODO:description]
+            make: Boolean if files should be created
         """
         self.KEY = "MIRA2_O3_v_1"
         self.root = Path(root)
@@ -131,10 +113,7 @@ class MIRA2FindAndMake:
         for file in tqdm(files, desc="Finding files with retrieval"):
             with h5py.File(file, "r") as fh:
                 if self.KEY in fh.keys():
-                    data = fh[self.KEY]
-                    conv = data.attrs["convergence"]
-                    if conv == 0.0:
-                        retfiles.append(file.resolve())
+                    retfiles.append(file.resolve())
 
         retfiles = np.array(sorted(retfiles))
         self.retfiles = retfiles

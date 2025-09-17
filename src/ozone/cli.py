@@ -1,6 +1,6 @@
 # from pathlib import Path
 from ._const import cli_commands
-from .parsers import arts_parser, m2make_parser
+from .parsers import arts_parser, m2make_parser, mlsmake_parser
 import argparse
 
 
@@ -20,6 +20,8 @@ def cli():
                 arts_parser(subparser)
             case "m2make":
                 m2make_parser(subparser)
+            case "mlsmake":
+                mlsmake_parser(subparser)
 
     args = parser.parse_args()
 
@@ -37,3 +39,7 @@ def cli():
         case "m2make":
             m2make = commands[args.command]
             m2make(root=args.root, make=args.make)
+
+        case "mlsmake":
+            mlsmake = commands[args.command]
+            mlsmake(root=args.root, make=args.make, radii=args.radii)
