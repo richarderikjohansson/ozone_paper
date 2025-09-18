@@ -2,6 +2,11 @@ import logging
 
 
 def get_logger() -> logging.Logger | None:
+    """Function to create logger object
+
+    Returns:
+        Logger object
+    """
 
     logger = logging.getLogger("runtime_logger")
     if not logger.hasHandlers():

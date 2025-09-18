@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 from .io import exportdir
 from .logger import get_logger
+from .utils import fill_nans
 from haversine import haversine, Unit
 
 
@@ -47,6 +48,8 @@ class MLSFindAndMake:
         """
         self.root = Path(root).resolve()
         self.name = self.root.name
+        if self.name == "T":
+            self.name = "Temperature"
         self.loc = (67.84, 20.41)
         self.radii = radii
         self.logger = get_logger()
@@ -118,10 +121,11 @@ class MLSFindAndMake:
 
         sorted_keys = sorted(umlsdct.keys())
         mlsdct = {key: umlsdct[key] for key in sorted_keys}
+        sdict = fill_nans(mlsdct)
         savepath = exportdir() / f"{self.name}_{self.radii}km.npy"
 
-        self.logger.info(f"Saving data into {savepath}")
-        np.save(savepath.resolve(), mlsdct, allow_pickle=True)
+        np.save(savepath.resolve(), sdict, allow_pickle=True)
+        self.logger.info(f"Saved data into {savepath}")
 
     def get_data(self, datafields):
         """Method to get all data from data fields
