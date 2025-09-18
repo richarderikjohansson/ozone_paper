@@ -4,7 +4,16 @@ from .io import exportdir
 from datetime import datetime
 
 
-def find_downloads():
+def find_downloads() -> Path:
+    """Function to locate and return Downloads directory
+
+    This function locates the Downloads directory and is
+    assumed to be located in $HOME/Downloads. If this
+    directory do not exist will it be created
+
+    Returns:
+        [TODO:description]
+    """
     home = Path.home()
     downloadsdir = home / "Downloads"
     if not downloadsdir.exists():
@@ -13,6 +22,18 @@ def find_downloads():
 
 
 def fill_nans(mdict: dict) -> dict:
+    """Function to fill NaN's if date is missing
+
+    This function takes the dictionary with data from either
+    MLS or MIRA2. If there is dates missing will the data be
+    filled with NaN with the correct shape of the data
+
+    Args:
+        mdict: Dictionary with data
+
+    Returns:
+        Dictionary with missing dates filled with NaN's
+    """
     keys = np.array([d.date() for d in mdict.keys()])
     shapes = {}
     for data in mdict.values():
