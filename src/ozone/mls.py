@@ -122,9 +122,15 @@ class MLSFindAndMake:
         sorted_keys = sorted(umlsdct.keys())
         mlsdct = {key: umlsdct[key] for key in sorted_keys}
         sdict = fill_nans(mlsdct)
+        mdict = {
+            "source": self.name,
+            "make_date": datetime.now()
+        }
         savepath = exportdir() / f"{self.name}_{self.radii}km.npy"
+        metapath = exportdir() / f"{self.name}_{self.radii}km.meta.npy"
 
         np.save(savepath.resolve(), sdict, allow_pickle=True)
+        np.save(metapath.resolve(), mdict, allow_pickle=True)
         self.logger.info(f"Saved data into {savepath}")
 
     def get_data(self, datafields):

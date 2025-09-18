@@ -166,5 +166,12 @@ class MIRA2FindAndMake:
 
         sdict = fill_nans(mdict)
         savepath = edir / "mira2.npy"
+        metapath = edir / "mira2.meta.npy"
+        mdict = {
+            "source": "mira2",
+            "make_date": datetime.now()
+        }
+
         np.save(savepath, sdict, allow_pickle=True)
+        np.save(metapath, mdict, allow_pickle=True)
         self.logger.info(f"Saved measurement and retrieval data into {savepath}")

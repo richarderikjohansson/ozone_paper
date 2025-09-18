@@ -62,3 +62,18 @@ def mlsmake_parser(subparser):
         default=200,
         help="Whether to create a file for the product"
     )
+
+
+def screening_parser(subparser):
+    subparser.add_argument(
+        "--source",
+        type=str,
+        default=None,
+        help="Path to file for wich data will be screened"
+    )
+    subparser.add_argument(
+        "--screen-file",
+        type=str,
+        default=None,
+        help="Path to the screening file"
+    )

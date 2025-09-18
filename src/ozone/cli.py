@@ -1,6 +1,7 @@
 # from pathlib import Path
 from ._const import cli_commands
-from .parsers import arts_parser, m2make_parser, mlsmake_parser
+from .parsers import arts_parser, m2make_parser, mlsmake_parser, screening_parser
+from .logger import get_logger
 import argparse
 
 
@@ -22,6 +23,8 @@ def cli():
                 m2make_parser(subparser)
             case "mlsmake":
                 mlsmake_parser(subparser)
+            case "screen":
+                screening_parser(subparser)
 
     args = parser.parse_args()
 
@@ -43,3 +46,11 @@ def cli():
         case "mlsmake":
             mlsmake = commands[args.command]
             mlsmake(root=args.root, make=args.make, radii=args.radii)
+
+        case "screen":
+            if args.source is not None or args.screen_file is not None:
+                screen = commands[args.command]
+            else:
+                logger = get_logger()
+                logger.error(("No source and/or screening file have been "
+                              "selected. See 'm2 screen --help' for help"))
