@@ -4,6 +4,8 @@ from tqdm import tqdm
 import numpy as np
 from datetime import datetime
 from .io import exportdir
+from .logger import get_logger
+from .utils import fill_nans
 
 
 def make_datetime(measure: h5py._hl.group.Group) -> datetime:
@@ -92,8 +94,9 @@ class MIRA2FindAndMake:
             make: Boolean if files should be created
         """
         self.KEY = "MIRA2_O3_v_1"
-        self.root = Path(root)
+        self.root = Path(root).resolve()
         self.find_mira2()
+        self.logger = get_logger()
 
         if make:
             self.makeproducts()
@@ -107,16 +110,17 @@ class MIRA2FindAndMake:
         retrieval have converged from the metadata written
         to the file.
         """
-        files = self.root.rglob(pattern="*.hdf5")
+        self.files = self.root.rglob(pattern="*.hdf5")
         retfiles = []
 
-        for file in tqdm(files, desc="Finding files with retrieval"):
+        for file in tqdm(self.files, desc="Finding files with retrieval"):
             with h5py.File(file, "r") as fh:
                 if self.KEY in fh.keys():
                     retfiles.append(file.resolve())
 
         retfiles = np.array(sorted(retfiles))
         self.retfiles = retfiles
+
 
     def makeproducts(self):
         """Method to create new files
@@ -133,9 +137,8 @@ class MIRA2FindAndMake:
         """
         edir = exportdir()
         mdict = {}
-        rdict = {}
 
-        for file in tqdm(self.retfiles, desc="Measurement products"):
+        for file in tqdm(self.retfiles, desc="Extracting products"):
             with h5py.File(file, "r") as f:
                 measure = f["mira2_data"]
                 retrieval = f[self.KEY]
@@ -144,20 +147,9 @@ class MIRA2FindAndMake:
                 mdict[dt] = {
                     "opacity": measure["opacity"][()],
                     "transmission": measure["transmission"][()],
-                    "pgrid": measure["p_grid"][()],
-                    "zgrid": measure["z_field"][()],
-                    "tgrid": measure["t_field"][()]
-                }
-
-        np.save(edir / "measure.npy", mdict, allow_pickle=True)
-        del mdict
-
-        for file in tqdm(self.retfiles, desc="Retrieval products"):
-            with h5py.File(file, "r") as f:
-                measure = f["mira2_data"]
-                retrieval = f[self.KEY]
-                dt = make_datetime(measure)
-                rdict[dt] = {
+                    "pmeas": measure["p_grid"][()],
+                    "zmeas": measure["z_field"][()],
+                    "tmeas": measure["t_field"][()],
                     "yf": retrieval["yf"][()],
                     "y": retrieval["y"][()],
                     "residual": retrieval["y"][()] - retrieval["yf"][()],
@@ -172,5 +164,7 @@ class MIRA2FindAndMake:
                     "apriori": retrieval["vmr_field"][()][0, :, 0, 0]
                 }
 
-        np.save(edir / "retrieval.npy", rdict, allow_pickle=True)
-        del rdict
+        sdict = fill_nans(mdict)
+        savepath = edir / "mira2.npy"
+        np.save(savepath, sdict, allow_pickle=True)
+        self.logger.info(f"Saved measurement and retrieval data into {savepath}")
