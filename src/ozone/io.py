@@ -1,20 +1,42 @@
 from pathlib import Path
 
 
-def exportdir() -> Path:
+def get_datadir() -> Path:
+    """Function to get path of data directory
+
+    Returns:
+        Path to data directory
+    """
+    file = Path(__file__)
+    src = file.parent
+    datadir = src / "data"
+
+    return datadir
+
+
+def get_exportdir() -> Path:
     """Function that returns export directory
 
     This function will create the directory "export"
-    within the code-base if it does not exist and will
-    return this path
+    within the systems .cache directory. If it does
+    not exist and will return this path
 
     Returns:
        Absolute path to the export directory
     """
-    filedir = Path(__file__).resolve()
-    ddir = filedir.parent / "data"
-    edir = ddir / "export"
-    if not edir.exists():
-        edir.mkdir()
+    home = Path.home()
+    cache = home / ".cache"
+    m2export = cache / "m2export"
 
-    return edir
+    if not m2export.exists():
+        m2export.mkdir()
+
+    return m2export
+
+
+
+
+
+
+
+

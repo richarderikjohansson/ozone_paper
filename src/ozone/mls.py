@@ -3,7 +3,7 @@ import h5py
 import numpy as np
 from datetime import datetime, timedelta
 from tqdm import tqdm
-from .io import exportdir
+from .io import get_exportdir
 from .logger import get_logger
 from .utils import fill_nans
 from haversine import haversine, Unit
@@ -75,7 +75,10 @@ class MLSFindAndMake:
         to limit the data so only data within a certain radii from Kiruna
         will be extracted
         """
+        files = []
         umlsdct = {}
+        edir = get_exportdir()
+
         for file in tqdm(self.files, desc=f"Getting MLS {self.name} data"):
             with h5py.File(file, "r") as fh:
                 data = fh["HDFEOS"]
@@ -110,7 +113,7 @@ class MLSFindAndMake:
                             "convergence": self.convergence[i],
                             "l2precision": self.l2_precision[i],
                             "l2value": self.l2_value[i],
-                            "precision": self.l2_precision[i],
+                            "precision": self.precision[i],
                             "quality": self.quality[i],
                             "status": self.status[i],
                             "lat": self.lat[i],
@@ -118,16 +121,20 @@ class MLSFindAndMake:
                             "pressure": self.p_grid,
                             "time": self.time[i],
                         }
+                        files.append(file)
 
         sorted_keys = sorted(umlsdct.keys())
         mlsdct = {key: umlsdct[key] for key in sorted_keys}
         sdict = fill_nans(mlsdct)
         mdict = {
-            "source": self.name,
-            "make_date": datetime.now()
+            "product": self.name,
+            "make_date": datetime.now(),
+            "haversine": self.radii,
+            "sources": files
         }
-        savepath = exportdir() / f"{self.name}_{self.radii}km.npy"
-        metapath = exportdir() / f"{self.name}_{self.radii}km.meta.npy"
+
+        savepath = edir / f"{self.name}.npy"
+        metapath = edir / f"{self.name}.meta.npy"
 
         np.save(savepath.resolve(), sdict, allow_pickle=True)
         np.save(metapath.resolve(), mdict, allow_pickle=True)

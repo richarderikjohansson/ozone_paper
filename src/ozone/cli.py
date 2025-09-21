@@ -2,6 +2,7 @@
 from ._const import cli_commands
 from .parsers import arts_parser, m2make_parser, mlsmake_parser, screening_parser
 from .logger import get_logger
+from .screening import MIRA2Screener, MLSScreener
 import argparse
 
 
@@ -48,9 +49,25 @@ def cli():
             mlsmake(root=args.root, make=args.make, radii=args.radii)
 
         case "screen":
-            if args.source is not None or args.screen_file is not None:
-                screen = commands[args.command]
+            if args.dataset is not None or args.filename is not None:
+                datascreen = commands[args.command]
+                obj = datascreen(dataset=args.dataset, filename=args.filename)
+
+                if obj.meta["product"] != "mira2":
+                    mlsscreen = MLSScreener(data=obj.data,
+                                            meta=obj.meta,
+                                            screen=obj.screen,
+                                            logger=obj.logger)
+
+                    mlsscreen.save_screened_data(filename=args.filename)
+                else:
+                    MIRA2Screener(obj.data, obj.meta, obj.screen)
+
             else:
                 logger = get_logger()
-                logger.error(("No source and/or screening file have been "
-                              "selected. See 'm2 screen --help' for help"))
+                logger.error(
+                    (
+                        "No source and/or screening file have been "
+                        "selected. See 'm2 screen --help' for help"
+                    )
+                )

@@ -3,7 +3,7 @@ import h5py
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime
-from .io import exportdir
+from .io import get_exportdir
 from .logger import get_logger
 from .utils import fill_nans
 
@@ -121,7 +121,6 @@ class MIRA2FindAndMake:
         retfiles = np.array(sorted(retfiles))
         self.retfiles = retfiles
 
-
     def makeproducts(self):
         """Method to create new files
 
@@ -135,7 +134,7 @@ class MIRA2FindAndMake:
         directory under 'measure.npy' and 'retrieval.npy' for
         the measurement and retrieval data respectively
         """
-        edir = exportdir()
+        edir = get_exportdir()
         mdict = {}
 
         for file in tqdm(self.retfiles, desc="Extracting products"):
@@ -150,6 +149,7 @@ class MIRA2FindAndMake:
                     "pmeas": measure["p_grid"][()],
                     "zmeas": measure["z_field"][()],
                     "tmeas": measure["t_field"][()],
+                    "meastime": measure["meas_duration"][()],
                     "yf": retrieval["yf"][()],
                     "y": retrieval["y"][()],
                     "residual": retrieval["y"][()] - retrieval["yf"][()],
@@ -168,8 +168,9 @@ class MIRA2FindAndMake:
         savepath = edir / "mira2.npy"
         metapath = edir / "mira2.meta.npy"
         mdict = {
-            "source": "mira2",
-            "make_date": datetime.now()
+            "product": "mira2",
+            "make_date": datetime.now(),
+            "sources": self.retfiles
         }
 
         np.save(savepath, sdict, allow_pickle=True)

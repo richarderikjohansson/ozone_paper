@@ -1,7 +1,7 @@
 from pathlib import Path
 import numpy as np
-from .io import exportdir
 from datetime import datetime
+from .io import get_datadir
 
 
 def find_downloads() -> Path:
@@ -12,7 +12,7 @@ def find_downloads() -> Path:
     directory do not exist will it be created
 
     Returns:
-        [TODO:description]
+        Path to the downloads directory
     """
     home = Path.home()
     downloadsdir = home / "Downloads"
@@ -41,7 +41,7 @@ def fill_nans(mdict: dict) -> dict:
             shapes[key] = product.shape
         break
 
-    daterange = np.load(exportdir() / "daterange.npy", allow_pickle=True)
+    daterange = np.load(get_datadir() / "daterange.npy", allow_pickle=True)
 
     for d in daterange:
         if d not in keys:

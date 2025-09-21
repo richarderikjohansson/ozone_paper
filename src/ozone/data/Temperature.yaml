@@ -1,0 +1,7 @@
+dataset: Temperature
+convergence: 1.03
+precision: 0
+status: not_odd
+quality: 0.2
+pmax: 80
+pmin: 0.01

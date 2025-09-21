@@ -1,0 +1,7 @@
+dataset: H2O
+convergence: 2.0
+precision: 0
+status: not_odd
+quality: 0.7
+pmax: 80
+pmin: 0.01

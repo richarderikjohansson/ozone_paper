@@ -66,14 +66,14 @@ def mlsmake_parser(subparser):
 
 def screening_parser(subparser):
     subparser.add_argument(
-        "--source",
+        "--dataset",
         type=str,
         default=None,
-        help="Path to file for wich data will be screened"
+        help="Dataset to perform screening on"
     )
     subparser.add_argument(
-        "--screen-file",
+        "--filename",
         type=str,
         default=None,
-        help="Path to the screening file"
+        help="Name of the file with the screened data"
     )
