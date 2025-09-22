@@ -1,7 +1,7 @@
 import logging
 
 
-def get_logger() -> logging.Logger | None:
+def get_logger() -> logging.Logger:
     """Function to create logger object
 
     Returns:
@@ -9,14 +9,12 @@ def get_logger() -> logging.Logger | None:
     """
 
     logger = logging.getLogger("runtime_logger")
-    if not logger.hasHandlers():
-        logger.setLevel(logging.DEBUG)
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.DEBUG)
-        console_format = logging.Formatter("[%(levelname)s] %(message)s")
-        console_handler.setFormatter(console_format)
+    logger.setLevel(logging.DEBUG)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(logging.DEBUG)
+    console_format = logging.Formatter("[%(levelname)s] %(message)s")
+    console_handler.setFormatter(console_format)
 
-        logger.addHandler(console_handler)
-        logger.propagate = False
-        return logger
-    return None
+    logger.addHandler(console_handler)
+    logger.propagate = False
+    return logger

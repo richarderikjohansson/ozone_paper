@@ -7,6 +7,7 @@ from .io import get_exportdir
 from .logger import get_logger
 from .utils import fill_nans
 from haversine import haversine, Unit
+import logging
 
 
 def make_datetime(seconds_array: np.ndarray) -> datetime:
@@ -38,7 +39,7 @@ class MLSFindAndMake:
     Find MLS files and make .npy file from these
     """
 
-    def __init__(self, root: str, make: bool, radii: int):
+    def __init__(self, root: str, radii: int, logger):
         """Init constructor
 
         Args:
@@ -52,11 +53,9 @@ class MLSFindAndMake:
             self.name = "Temperature"
         self.loc = (67.84, 20.41)
         self.radii = radii
-        self.logger = get_logger()
+        self.logger = logger
         self.find_mls()
-
-        if make:
-            self.make_mls()
+        self.make_mls()
 
     def find_mls(self):
         """Method to find the files

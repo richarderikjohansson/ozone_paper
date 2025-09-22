@@ -3,13 +3,13 @@ from .utils import fill_nans, find_downloads
 from .logger import get_logger
 import numpy as np
 import yaml
+from datetime import datetime
 
 
 class DataScreener:
     def __init__(self, dataset, filename):
         self.ddir = get_datadir()
         self.edir = get_exportdir()
-        self.logger = get_logger()
         self.dataset = dataset
         self.filename = filename
 
@@ -42,15 +42,16 @@ class DataScreener:
             self.screen = yaml.load(fh, Loader=yaml.SafeLoader)
 
         assert self.meta["product"] == self.screen["dataset"]
-        return self.data, self.meta, self.screen, self.logger
+        return self.data, self.meta, self.screen
 
 
 class MLSScreener:
-    def __init__(self, data, meta, screen, logger):
+    def __init__(self, data, meta, screen, logger, winter):
         self.meta = meta
         self.data = data
         self.screen = screen
         self.logger = logger
+        self.winter = winter
         self.get_data()
 
     def get_data(self):
@@ -103,7 +104,17 @@ class MLSScreener:
 
         self.precision_mask = np.array(msk)
 
+    def _screen_winter(self):
+        start = datetime(2019, 10, 1, 0, 0, 0)
+        end = datetime(2020, 5, 1, 0, 0, 0)
+        dts = np.array([dt for dt in self.data.keys()])
+        self.winter_mask = (dts >= start)&(dts <=end)
+
     def save_screened_data(self, filename):
+        if self.winter:
+            self._screen_winter()
+        else:
+            self.winter_mask = np.array([True for dt in self.data.keys()])
         self._screen_status()
         self._screen_quality()
         self._screen_convergence()
@@ -114,6 +125,7 @@ class MLSScreener:
             & self.quality_mask
             & self.convergence_mask
             & self.precision_mask
+            & self.winter_mask
         )
         screened_dts = self.dt[combined_mask]
         mdict = {dt: self.data[dt] for dt in screened_dts}
@@ -125,9 +137,8 @@ class MLSScreener:
 
 
 class MIRA2Screener:
-    def __init__(self, data, meta, screen):
+    def __init__(self, data, meta, screen, logger):
         self.meta = meta
         self.data = data
         self.screen = screen
-
-        print(self.convergence)
+        self.logger = logger

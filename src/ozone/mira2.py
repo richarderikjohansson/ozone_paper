@@ -86,7 +86,7 @@ class MIRA2FindAndMake:
     retrieval data.
     """
 
-    def __init__(self, root: str, make: bool):
+    def __init__(self, root: str, make: bool, logger):
         """Init constructor
 
         Args:
@@ -96,7 +96,7 @@ class MIRA2FindAndMake:
         self.KEY = "MIRA2_O3_v_1"
         self.root = Path(root).resolve()
         self.find_mira2()
-        self.logger = get_logger()
+        self.logger = logger 
 
         if make:
             self.makeproducts()
