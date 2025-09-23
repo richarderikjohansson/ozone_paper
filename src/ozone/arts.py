@@ -1,7 +1,7 @@
 import pyarts
 import numpy as np
 from pathlib import Path
-from .utils import find_downloads
+from .io import get_exportdir
 
 
 class Ycalc:
