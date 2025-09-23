@@ -1,13 +1,11 @@
 import pyarts
 import numpy as np
 from pathlib import Path
-from .logger import get_logger
-from .utils import find_downloads
+from .io import get_simulationdir
 
 
 class Ycalc:
-    def __init__(self, start, end, nf, summer, save):
-        self.logger = get_logger()
+    def __init__(self, start, end, nf, summer, save, logger):
         self.start = start
         self.end = end
         self.nf = nf
@@ -15,6 +13,7 @@ class Ycalc:
         self.lat = [67.8]
         self.lon = [20.22]
         self.f0 = 273.051010e9
+        self.logger = logger
         self.arts = pyarts.workspace.Workspace()
 
         self.set_catalogue()
@@ -119,13 +118,12 @@ class Ycalc:
         self.arts.propmat_clearsky_agenda_checkedCalc()
 
     def ycalc(self, save):
-        savedir = find_downloads()
         if save is None:
             savename = f"{int(self.start)}_{int(self.end)}.npy"
         else:
             savename = f"{save}.npy"
 
-        savepath = savedir / savename
+        savepath = get_simulationdir() / savename
         self.logger.info("Starting yCalc")
         self.arts.yCalc()
         self.logger.info(f"yCalc done and saving to:\n{savepath}")

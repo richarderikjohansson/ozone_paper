@@ -52,9 +52,36 @@ def mlsmake_parser(subparser):
         help="Root directory where product data is located"
     )
     subparser.add_argument(
-        "--make",
-        action="store_true",
+        "--radii",
+        type=int,
+        default=200,
         help="Whether to create a file for the product"
+    )
+
+
+def screening_parser(subparser):
+    subparser.add_argument(
+        "--dataset",
+        type=str,
+        default=None,
+        help="Dataset to perform screening on"
+    )
+    subparser.add_argument(
+        "--winter",
+        action="store_true",
+        help="Whether to only select winter months"
+    )
+    subparser.add_argument(
+        "--filename",
+        type=str,
+        default=None,
+        help="Name of the file with the screened data"
+    )
+    subparser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="Root directory where product data is located"
     )
     subparser.add_argument(
         "--radii",
@@ -62,3 +89,4 @@ def mlsmake_parser(subparser):
         default=200,
         help="Whether to create a file for the product"
     )
+
