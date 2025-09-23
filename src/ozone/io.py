@@ -17,7 +17,7 @@ def get_datadir() -> Path:
 def get_exportdir() -> Path:
     """Function that returns export directory
 
-    This function will create the directory "export"
+    This function will create the directory "m2export"
     within the systems .cache directory. If it does
     not exist and will return this path
 
@@ -34,9 +34,42 @@ def get_exportdir() -> Path:
     return m2export
 
 
+def get_screendir() -> Path:
+    """Function that returns screen directory
+
+    This function will create the directory "screen"
+    within the systems .cache directory. If it does
+    not exist and will return this path
+
+    Returns:
+       Absolute path to the export directory
+    """
+    home = Path.home()
+    cache = home / ".cache"
+    screen = cache / "screen"
+
+    if not screen.exists():
+        screen.mkdir()
+
+    return screen
 
 
+def get_simulationdir() -> Path:
+    """Function that returns export directory
 
+    This function will create the directory "simulation"
+    within the systems .cache directory. If it does
+    not exist and will return this path
 
+    Returns:
+       Absolute path to the export directory
+    """
 
+    home = Path.home()
+    cache = home / ".cache"
+    simulation = cache / "simulation"
 
+    if not simulation.exists():
+        simulation.mkdir()
+
+    return simulation

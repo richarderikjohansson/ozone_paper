@@ -1,4 +1,4 @@
-from .io import get_datadir, get_exportdir
+from .io import get_datadir, get_exportdir, get_screendir
 from .utils import fill_nans, find_downloads
 from .logger import get_logger
 import numpy as np
@@ -130,7 +130,7 @@ class MLSScreener:
         screened_dts = self.dt[combined_mask]
         mdict = {dt: self.data[dt] for dt in screened_dts}
         sdict = fill_nans(mdict=mdict)
-        savepath = find_downloads() / f"{filename}.npy"
+        savepath = get_screendir() / f"{filename}.npy"
         product = self.meta["product"]
         np.save(savepath, sdict, allow_pickle=True)
         self.logger.info(f"Screened {product} file saved in {savepath}")

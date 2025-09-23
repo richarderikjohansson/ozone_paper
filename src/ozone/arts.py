@@ -1,7 +1,7 @@
 import pyarts
 import numpy as np
 from pathlib import Path
-from .io import get_exportdir
+from .io import get_simulationdir
 
 
 class Ycalc:
@@ -118,13 +118,12 @@ class Ycalc:
         self.arts.propmat_clearsky_agenda_checkedCalc()
 
     def ycalc(self, save):
-        savedir = find_downloads()
         if save is None:
             savename = f"{int(self.start)}_{int(self.end)}.npy"
         else:
             savename = f"{save}.npy"
 
-        savepath = savedir / savename
+        savepath = get_simulationdir() / savename
         self.logger.info("Starting yCalc")
         self.arts.yCalc()
         self.logger.info(f"yCalc done and saving to:\n{savepath}")

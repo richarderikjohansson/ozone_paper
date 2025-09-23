@@ -39,6 +39,7 @@ def cli():
                 nf=args.nf,
                 summer=args.summer,
                 save=args.save,
+                logger=logger
             )
 
         case "m2make":
