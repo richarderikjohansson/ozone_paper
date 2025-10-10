@@ -3,7 +3,7 @@ import h5py
 import numpy as np
 from datetime import datetime, timedelta
 from tqdm import tqdm
-from .io import get_exportdir
+from .io import get_exportdir, get_datadir
 from .logger import get_logger
 from .utils import fill_nans
 from haversine import haversine, Unit
@@ -39,7 +39,7 @@ class MLSFindAndMake:
     Find MLS files and make .npy file from these
     """
 
-    def __init__(self, root: str, radii: int, logger):
+    def __init__(self, root: str, logger):
         """Init constructor
 
         Args:
@@ -52,7 +52,7 @@ class MLSFindAndMake:
         if self.name == "T":
             self.name = "Temperature"
         self.loc = (67.84, 20.41)
-        self.radii = radii
+        self.radii = 200
         self.logger = logger
         self.find_mls()
         self.make_mls()
@@ -77,6 +77,10 @@ class MLSFindAndMake:
         files = []
         umlsdct = {}
         edir = get_exportdir()
+        ddir = get_datadir()
+        daterange = np.load(ddir / "daterange.npy", allow_pickle=True)
+        start = daterange[0]
+        end = daterange[-1]
 
         for file in tqdm(self.files, desc=f"Getting MLS {self.name} data"):
             with h5py.File(file, "r") as fh:
@@ -106,7 +110,7 @@ class MLSFindAndMake:
                     else:
                         continue
 
-                    if haversinedist <= self.radii:
+                    if haversinedist <= self.radii and start <= self.dt[i].date() <= end:
                         umlsdct[self.dt[i]] = {
                             f"{self.name}": self.prod[i],
                             "convergence": self.convergence[i],

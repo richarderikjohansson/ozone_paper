@@ -2,6 +2,7 @@ from .arts import Ycalc
 from .mira2 import MIRA2FindAndMake
 from .mls import MLSFindAndMake
 from .screening import DataScreener
+from .plotting import Plotting
 
 
 def cli_commands():
@@ -9,13 +10,21 @@ def cli_commands():
     commands = {"arts": Ycalc,
                 "m2make": MIRA2FindAndMake,
                 "mlsmake": MLSFindAndMake,
-                "screen": DataScreener}
+                "screen": DataScreener,
+                "plotting": Plotting}
 
     desc = {
         "arts": "Used for making simulations with pyarts",
         "m2make": "Used to find MIRA2 files and make product files",
         "mlsmake": "Used to find MLS files and make new file with product",
-        "screen": "Used to screen data for either MIRA2 or MLS"
+        "screen": "Used to screen data for either MIRA2 or MLS",
+        "plotting": "Used to plot figures"
     }
 
     return commands, desc
+
+def figure_methods():
+    methods = [
+        ("make_fig01", "fig01")
+    ]
+    return methods

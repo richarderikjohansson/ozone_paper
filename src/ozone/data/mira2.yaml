@@ -1,2 +1,6 @@
 dataset: mira2
 convergence: 0.0
+midday-delta: 2
+midnight-delta: 2
+mr-min: 0.8
+res-delta: 1.3
