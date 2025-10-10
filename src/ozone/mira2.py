@@ -2,8 +2,8 @@ from pathlib import Path
 import h5py
 from tqdm import tqdm
 import numpy as np
-from datetime import datetime
-from .io import get_exportdir
+from datetime import datetime, timedelta
+from .io import get_exportdir, get_datadir
 from .logger import get_logger
 from .utils import fill_nans
 
@@ -50,10 +50,10 @@ def make_datetime(measure: h5py._hl.group.Group) -> datetime:
     start = datetime.strptime(
         f"{start_year}{start_month}{start_day}{start_hour}{start_min}{start_sec}",
         "%Y%m%d%H%M%S",
-    )
+    ) - timedelta(hours=1)
     end = datetime.strptime(
         f"{end_year}{end_month}{end_day}{end_hour}{end_min}{end_sec}", "%Y%m%d%H%M%S"
-    )
+    ) - timedelta(hours=1)
     delta = end - start
     mid = start + delta / 2
     return mid
@@ -135,34 +135,42 @@ class MIRA2FindAndMake:
         the measurement and retrieval data respectively
         """
         edir = get_exportdir()
+        ddir = get_datadir()
+        daterange = np.load(ddir / "daterange.npy",
+                            allow_pickle=True)
+        start = daterange[0]
+        end = daterange[-1]
         mdict = {}
 
         for file in tqdm(self.retfiles, desc="Extracting products"):
             with h5py.File(file, "r") as f:
                 measure = f["mira2_data"]
                 retrieval = f[self.KEY]
+                convergence = retrieval.attrs["convergence"]
 
                 dt = make_datetime(measure)
-                mdict[dt] = {
-                    "opacity": measure["opacity"][()],
-                    "transmission": measure["transmission"][()],
-                    "pmeas": measure["p_grid"][()],
-                    "zmeas": measure["z_field"][()],
-                    "tmeas": measure["t_field"][()],
-                    "meastime": measure["meas_duration"][()],
-                    "yf": retrieval["yf"][()],
-                    "y": retrieval["y"][()],
-                    "residual": retrieval["y"][()] - retrieval["yf"][()],
-                    "f": retrieval["f_backend"][()],
-                    "avk": retrieval["avk"][()][0:41, 0:41],
-                    "mr": calculate_mr(retrieval),
-                    "pgrid": retrieval["p_grid"][()],
-                    "zgrid": retrieval["z_field"][()][:, 0, 0],
-                    "eo": retrieval["retrieval_eo"][()][0:41],
-                    "ss": retrieval["retrieval_ss"][()][0:41],
-                    "x": retrieval["x"][()][0:41],
-                    "apriori": retrieval["vmr_field"][()][0, :, 0, 0]
-                }
+                if start <= dt.date() <= end:
+                    mdict[dt] = {
+                        "opacity": measure["opacity"][()],
+                        "transmission": measure["transmission"][()],
+                        "pmeas": measure["p_grid"][()],
+                        "zmeas": measure["z_field"][()],
+                        "tmeas": measure["t_field"][()],
+                        "meastime": measure["meas_duration"][()],
+                        "yf": retrieval["yf"][()],
+                        "y": retrieval["y"][()],
+                        "residual": retrieval["y"][()] - retrieval["yf"][()],
+                        "f": retrieval["f_backend"][()],
+                        "avk": retrieval["avk"][()][0:41, 0:41],
+                        "mr": calculate_mr(retrieval),
+                        "pgrid": retrieval["p_grid"][()],
+                        "zgrid": retrieval["z_field"][()][:, 0, 0],
+                        "eo": retrieval["retrieval_eo"][()][0:41],
+                        "ss": retrieval["retrieval_ss"][()][0:41],
+                        "x": retrieval["x"][()][0:41],
+                        "apriori": retrieval["vmr_field"][()][0, :, 0, 0],
+                        "convergence": convergence
+                    }
 
         sdict = fill_nans(mdict)
         savepath = edir / "mira2.npy"

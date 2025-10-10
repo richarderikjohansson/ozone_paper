@@ -56,3 +56,21 @@ def fill_nans(mdict: dict) -> dict:
     dict_keys_sorted = sorted(mdict.keys())
     sdict = {k: mdict[k] for k in dict_keys_sorted}
     return sdict
+
+
+def fill_nan(data: dict, drange: np.ndarray) -> dict:
+    shapes = {}
+    for val in data.values():
+        for key, product in val.items():
+            shapes[key] = product.shape
+        break
+
+    dates = [d.date() for d in data]
+    for dt in drange:
+        date = dt.date()
+        if date not in dates:
+            data[dt] = {k: np.full(s, np.nan) for k, s in shapes.items()}
+
+    dict_keys_sorted = sorted(data.keys())
+    sdata = {k: data[k] for k in dict_keys_sorted}
+    return sdata

@@ -67,11 +67,6 @@ def screening_parser(subparser):
         help="Dataset to perform screening on"
     )
     subparser.add_argument(
-        "--winter",
-        action="store_true",
-        help="Whether to only select winter months"
-    )
-    subparser.add_argument(
         "--filename",
         type=str,
         default=None,
@@ -90,3 +85,11 @@ def screening_parser(subparser):
         help="Whether to create a file for the product"
     )
 
+
+def plotting_parser(subparser):
+    subparser.add_argument(
+        "--figure",
+        type=str,
+        default="all",
+        help="Dataset to perform screening on"
+    )
