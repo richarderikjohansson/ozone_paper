@@ -3,6 +3,7 @@ from .mira2 import MIRA2FindAndMake
 from .mls import MLSFindAndMake
 from .screening import DataScreener
 from .plotting import Plotting
+from .regrid import MLSRegridding
 
 
 def cli_commands():
@@ -11,17 +12,20 @@ def cli_commands():
                 "m2make": MIRA2FindAndMake,
                 "mlsmake": MLSFindAndMake,
                 "screen": DataScreener,
-                "plotting": Plotting}
+                "plotting": Plotting,
+                "regrid": MLSRegridding}
 
     desc = {
         "arts": "Used for making simulations with pyarts",
         "m2make": "Used to find MIRA2 files and make product files",
         "mlsmake": "Used to find MLS files and make new file with product",
         "screen": "Used to screen data for either MIRA2 or MLS",
-        "plotting": "Used to plot figures"
+        "plotting": "Used to plot figures",
+        "regrid": "Used to interpolare MLS data to MIRA2 pressure grid"
     }
 
     return commands, desc
+
 
 def figure_methods():
     methods = [

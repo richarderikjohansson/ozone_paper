@@ -93,3 +93,18 @@ def plotting_parser(subparser):
         default="all",
         help="Dataset to perform screening on"
     )
+
+def regrid_parser(subparser):
+    subparser.add_argument(
+        "--dataset",
+        type=str,
+        default="all",
+        help="Dataset to perform regridding on"
+    )
+    subparser.add_argument(
+        "--period",
+        type=str,
+        default=None,
+        help="Either 'day' time or 'night' time data"
+    )
+

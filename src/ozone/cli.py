@@ -1,6 +1,6 @@
 # from pathlib import Path
 from ._const import cli_commands, figure_methods
-from .parsers import arts_parser, m2make_parser, mlsmake_parser, screening_parser, plotting_parser
+from .parsers import arts_parser, m2make_parser, mlsmake_parser, screening_parser, plotting_parser, regrid_parser
 from .logger import get_logger
 from .screening import MIRA2Screener, MLSScreener
 from .plotting import dynamic_caller
@@ -29,6 +29,8 @@ def cli():
                 screening_parser(subparser)
             case "plotting":
                 plotting_parser(subparser)
+            case "regrid":
+                regrid_parser(subparser)
 
     args = parser.parse_args()
     logger = get_logger()
@@ -89,3 +91,24 @@ def cli():
                 for meth, figure in methods:
                     method = dynamic_caller(obj, meth)
                     method(figure)
+
+        case "regrid":
+            regrid = commands[args.command]
+            opts = ["O3", "H2O", "ClO", "Temperature", "N2O"]
+
+            if args.period is not None:
+                if args.dataset == "all":
+                    for dataset in opts:
+                        obj = regrid(dataset=dataset, period=args.period, logger=logger)
+                        obj.read_data()
+                        obj.regrid_MLS()
+                else:
+                    obj = regrid(dataset=args.dataset, period=args.period, logger=logger)
+                    obj.read_data()
+                    obj.regrid_MLS()
+            else:
+                logger.error("Select either 'day' or 'night' as the period")
+
+
+
+
