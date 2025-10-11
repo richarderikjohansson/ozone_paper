@@ -3,7 +3,8 @@ from datetime import datetime
 from datetime import time
 from datetime import timedelta
 from .io import get_screendir, get_datadir
-from .utils import fill_nan
+from .utils import fill_nan, find_downloads
+from scipy.interpolate import interp1d
 
 
 def get_period(data: dict, period: str):
@@ -77,6 +78,10 @@ def mk_daterange(period: str):
 
 
 class MLSRegridding:
+    """
+    Class to regrid MLS data to MIRA2 pressure grid
+    """
+
     def __init__(self, dataset, period, logger):
         self.dataset = dataset
         self.period = period
@@ -84,17 +89,52 @@ class MLSRegridding:
         self.daterange = mk_daterange(period=self.period)
 
     def read_data(self):
+        """Method to read screened MLS data from ~/.cache/screen
+        """
         screendir = get_screendir()
         filepath = screendir / f"{self.dataset}.npy"
 
         if filepath.exists():
-            self.logger.info(f"Reading MLS {self.dataset}")
+            self.found = True
             data = np.load(filepath, allow_pickle=True).item()
             drange = mk_daterange(period=self.period)
             temp = get_period(data=data, period=self.period)
             self.data = fill_nan(data=temp, drange=drange)
         else:
-            self.logger.info(f"Could not find {self.dataset}")
+            self.found = False
+            self.logger.warning(f"Could not find {self.dataset}")
 
     def regrid_MLS(self):
-        psource = np.load(get_datadir() / "pgrid.npy", allow_pickle=True)
+        """Method to grid MLS data to MIRA2 pressure grid
+
+        Reads mean pressure file from MIRA2. Then interpolates
+        the MLS data to that pressure grid
+        """
+        p_target = np.load(get_datadir() / "pgrid.npy", allow_pickle=True)
+
+        for v in self.data.values():
+            if not np.isnan(v[self.dataset]).any():
+                p_source = v["pressure"]
+                product = v[self.dataset]
+                logp_src = np.log(p_source)
+                logp_tgt = np.log(p_target)
+
+                # check if another interpolation kind is better suited
+                interp = interp1d(
+                    logp_src,
+                    product,
+                    kind="linear",
+                    bounds_error=False,
+                    fill_value=np.nan,
+                )
+                productnew = interp(logp_tgt)
+                v["p_coarse"] = p_target
+                v[f"{self.dataset}_coarse"] = productnew
+            else:
+                v["p_coarse"] = np.full_like(p_target, np.nan),
+                v[f"{self.dataset}_coarse"] = np.full_like(p_target, np.nan)
+
+        fn = f"{self.dataset}{self.period}_regridded.npy"
+        savepath = find_downloads() / fn
+        self.logger.info(f"Saving regridded {self.dataset} in {savepath}")
+        np.save(savepath, self.data, allow_pickle=True)

@@ -99,13 +99,19 @@ def cli():
             if args.period is not None:
                 if args.dataset == "all":
                     for dataset in opts:
-                        obj = regrid(dataset=dataset, period=args.period, logger=logger)
+                        obj = regrid(dataset=dataset,
+                                     period=args.period,
+                                     logger=logger)
                         obj.read_data()
-                        obj.regrid_MLS()
+                        if obj.found:
+                            obj.regrid_MLS()
                 else:
-                    obj = regrid(dataset=args.dataset, period=args.period, logger=logger)
+                    obj = regrid(dataset=args.dataset,
+                                 period=args.period,
+                                 logger=logger)
                     obj.read_data()
-                    obj.regrid_MLS()
+                    if obj.found:
+                        obj.regrid_MLS()
             else:
                 logger.error("Select either 'day' or 'night' as the period")
 
