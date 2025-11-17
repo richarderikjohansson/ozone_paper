@@ -5,7 +5,6 @@ from datetime import timedelta
 
 
 def get_period(data: dict, period: str):
-
     rdata = {}
     match period:
         case "day":
@@ -29,8 +28,22 @@ def mk_daterange(period: str):
         case "night":
             hour = 2
 
-    start = datetime(year=2019, month=10, day=1, hour=hour, minute=0, second=0,)
-    end = datetime(year=2020, month=4, day=30, hour=hour, minute=0, second=0,)
+    start = datetime(
+        year=2019,
+        month=10,
+        day=1,
+        hour=hour,
+        minute=0,
+        second=0,
+    )
+    end = datetime(
+        year=2020,
+        month=4,
+        day=30,
+        hour=hour,
+        minute=0,
+        second=0,
+    )
     daterange = []
     current = start
 
