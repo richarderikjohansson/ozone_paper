@@ -1,6 +1,17 @@
 from pathlib import Path
 
 
+def get_localdir():
+    home = Path.home()
+    local = home / ".local"
+    ozonepaper = local / "ozonepaper"
+
+    if not ozonepaper.exists():
+        ozonepaper.mkdir()
+
+    return ozonepaper
+
+
 def get_datadir() -> Path:
     """Function to get path of data directory
 
