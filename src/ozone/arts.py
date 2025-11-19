@@ -1,7 +1,7 @@
 import pyarts
 import numpy as np
 from pathlib import Path
-from .io import get_simulationdir
+from .io import get_downloadsdir
 
 
 class Ycalc:
@@ -44,7 +44,7 @@ class Ycalc:
                 f"N2O-*-{self.start - 1}-{self.end + 1}",
                 f"HNO3-*-{self.start - 1}-{self.end + 1}",
                 "H2O-PWR98",
-                f"H2O-*-{self.start - 1}-{self.end + 1}"
+                f"H2O-*-{self.start - 1}-{self.end + 1}",
             ]
         )
         self.arts.Wigner6Init()
@@ -54,11 +54,13 @@ class Ycalc:
         catalogue_path = home / ".cache/arts/"
 
         if not catalogue_path.exists():
-            self.logger.warning(f"Catalogue data not found. Downloading into {catalogue_path}\n")
+            self.logger.warning(
+                f"Catalogue data not found. Downloading into {catalogue_path}\n"
+            )
             pyarts.cat.download.retrieve(verbose=True)
 
-        self.cat_data = catalogue_path / "arts-cat-data-2.6.16"
-        self.xml_data = catalogue_path / "arts-xml-data-2.6.16"
+        self.cat_data = catalogue_path / "arts-cat-data-2.6.18"
+        self.xml_data = catalogue_path / "arts-xml-data-2.6.18"
 
     def set_grids(self, summer=False):
         self.arts.p_grid = np.logspace(np.log10(105000), np.log10(0.1))
@@ -103,7 +105,7 @@ class Ycalc:
         self.arts.sensorOff()
 
     def set_lines_per_species(self, save):
-        self.logger.info(f"Calculating abs lines")
+        self.logger.info("Calculating abs lines")
         self.arts.abs_lines_per_speciesReadSpeciesSplitCatalog(
             basename=f"{self.cat_data}/lines/"
         )
@@ -123,7 +125,7 @@ class Ycalc:
         else:
             savename = f"{save}.npy"
 
-        savepath = get_simulationdir() / savename
+        savepath = get_downloadsdir() / savename
         self.logger.info("Starting yCalc")
         self.arts.yCalc()
         self.logger.info(f"yCalc done and saving to:\n{savepath}")
@@ -131,9 +133,5 @@ class Ycalc:
         sQ = self.arts.y.value[1::4]
         sU = self.arts.y.value[2::4]
         sV = self.arts.y.value[3::4]
-        data = {"f": self.arts.f_grid.value,
-                "I": sI,
-                "Q": sQ,
-                "U": sU,
-                "V": sV}
+        data = {"f": self.arts.f_grid.value, "I": sI, "Q": sQ, "U": sU, "V": sV}
         np.save(savepath, data)

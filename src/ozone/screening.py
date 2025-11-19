@@ -1,4 +1,4 @@
-from .io import get_datadir, get_exportdir, get_screendir
+from .io import get_datadir, get_exportdir, get_screendir, get_downloadsdir
 import numpy as np
 import yaml
 from datetime import datetime, time
@@ -54,16 +54,13 @@ class MLSScreener:
 
     def get_data(self):
         self.dt = np.array([dt for dt in self.data.keys()])
-        self.precision = np.array([data["precision"]
-                                  for data in self.data.values()])
+        self.precision = np.array([data["precision"] for data in self.data.values()])
         self.status = np.array([data["status"] for data in self.data.values()])
-        self.quality = np.array([data["quality"]
-                                for data in self.data.values()])
+        self.quality = np.array([data["quality"] for data in self.data.values()])
         self.convergence = np.array(
             [data["convergence"] for data in self.data.values()]
         )
-        self.pressure = np.array([data["pressure"]
-                                 for data in self.data.values()])
+        self.pressure = np.array([data["pressure"] for data in self.data.values()])
 
     def _screen_status(self):
         status = self.screen["status"]
@@ -130,7 +127,7 @@ class MLSScreener:
         )
         screened_dts = self.dt[combined_mask]
         mdict = {dt: self.data[dt] for dt in screened_dts}
-        savepath = get_screendir() / f"{filename}.npy"
+        savepath = get_downloadsdir() / f"{filename}.npy"
         product = self.meta["product"]
         np.save(savepath, mdict, allow_pickle=True)
         self.logger.info(f"Screened {product} file saved in {savepath}")
@@ -150,13 +147,10 @@ class MIRA2Screener:
 
         self.data = tmp
         self.dt = np.array([k for k in self.data.keys()])
-        self.convergence = np.array([val["convergence"]
-                                    for val in self.data.values()])
+        self.convergence = np.array([val["convergence"] for val in self.data.values()])
         self.mr = np.array([val["mr"] for val in self.data.values()])
-        self.residual = np.array([val["residual"]
-                                 for val in self.data.values()])
-        self.meastime = np.array([val["meastime"]
-                                 for val in self.data.values()])
+        self.residual = np.array([val["residual"] for val in self.data.values()])
+        self.meastime = np.array([val["meastime"] for val in self.data.values()])
 
     def get_day_and_night_data(self):
         dday = self.screen["midday-delta"]
@@ -167,7 +161,7 @@ class MIRA2Screener:
         day = [time(12 - dday, 0, 0), time(12 + dday, 0, 0)]
         night = [time(2 - dnight, 0, 0), time(2 + dnight, 0, 0)]
 
-        for i, t in enumerate(tarr):
+        for i, t in enumerate():
             dbool = day[0] <= t <= day[-1]
             nbool = night[0] <= t <= night[-1]
             if dbool or nbool:
@@ -200,7 +194,7 @@ class MIRA2Screener:
 
         screened_dts = self.dt[combined_mask]
         mdict = {dt: self.data[dt] for dt in screened_dts}
-        savepath = get_screendir() / f"{filename}.npy"
+        savepath = get_downloadsdir() / f"{filename}.npy"
         product = self.meta["product"]
         np.save(savepath, mdict, allow_pickle=True)
         self.logger.info(f"Screened {product} file saved in {savepath}")

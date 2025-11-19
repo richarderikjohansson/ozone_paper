@@ -12,6 +12,12 @@ def get_localdir():
     return ozonepaper
 
 
+def get_downloadsdir():
+    home = Path.home()
+    ddir = home / "Downloads"
+    return ddir
+
+
 def get_datadir() -> Path:
     """Function to get path of data directory
 

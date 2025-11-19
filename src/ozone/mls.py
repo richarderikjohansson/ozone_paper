@@ -110,7 +110,10 @@ class MLSFindAndMake:
                     else:
                         continue
 
-                    if haversinedist <= self.radii and start <= self.dt[i].date() <= end:
+                    if (
+                        haversinedist <= self.radii
+                        and start <= self.dt[i].date() <= end
+                    ):
                         umlsdct[self.dt[i]] = {
                             f"{self.name}": self.prod[i],
                             "convergence": self.convergence[i],
@@ -133,7 +136,7 @@ class MLSFindAndMake:
             "product": self.name,
             "make_date": datetime.now(),
             "haversine": self.radii,
-            "sources": files
+            "sources": files,
         }
 
         savepath = edir / f"{self.name}.npy"

@@ -1,6 +1,12 @@
-# from pathlib import Path
+from pathlib import Path
 from ._const import cli_commands, figure_methods
-from .parsers import arts_parser, m2make_parser, mlsmake_parser, screening_parser, plotting_parser
+from .parsers import (
+    arts_parser,
+    m2make_parser,
+    mlsmake_parser,
+    screening_parser,
+    plotting_parser,
+)
 from .logger import get_logger
 from .screening import MIRA2Screener, MLSScreener
 from .plotting import dynamic_caller
@@ -42,7 +48,7 @@ def cli():
                 nf=args.nf,
                 summer=args.summer,
                 save=args.save,
-                logger=logger
+                logger=logger,
             )
 
         case "m2make":
@@ -65,27 +71,33 @@ def cli():
             obj = datascreen(dataset=args.dataset, filename=args.filename)
 
             if obj.meta["product"] != "mira2":
-                mlsscreen = MLSScreener(data=obj.data,
-                                        meta=obj.meta,
-                                        screen=obj.screen,
-                                        logger=logger,
-                                        winter=True,
-                                        )
+                mlsscreen = MLSScreener(
+                    data=obj.data,
+                    meta=obj.meta,
+                    screen=obj.screen,
+                    logger=logger,
+                    winter=True,
+                )
 
                 mlsscreen.save_screened_data(filename=args.filename)
             else:
-                mira2screen = MIRA2Screener(data=obj.data,
-                                            meta=obj.meta,
-                                            screen=obj.screen,
-                                            logger=logger)
+                mira2screen = MIRA2Screener(
+                    data=obj.data, meta=obj.meta, screen=obj.screen, logger=logger
+                )
                 mira2screen.save_screened_data(filename=args.filename)
 
         case "plotting":
             plotting = commands[args.command]
             obj = plotting(logger=logger)
 
-            if args.figure == "all":
-                methods = figure_methods()
-                for meth, figure in methods:
-                    method = dynamic_caller(obj, meth)
-                    method(figure)
+            # if args.figure == "all":
+            #     methods = figure_methods()
+            #     for meth, figure in methods:
+            #         method = dynamic_caller(obj, meth)
+            #         method(figure)
+
+            if args.figure == "fig01":
+                filename = Path(args.filename)
+                name = filename.name.split(".")[0]
+                assert args.figure == name
+                obj.make_fig01(figure=args.figure, file=filename)

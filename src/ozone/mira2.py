@@ -4,7 +4,6 @@ from tqdm import tqdm
 import numpy as np
 from datetime import datetime, timedelta
 from .io import get_exportdir, get_datadir
-from .logger import get_logger
 from .utils import fill_nans
 
 
@@ -136,8 +135,7 @@ class MIRA2FindAndMake:
         """
         edir = get_exportdir()
         ddir = get_datadir()
-        daterange = np.load(ddir / "daterange.npy",
-                            allow_pickle=True)
+        daterange = np.load(ddir / "daterange.npy", allow_pickle=True)
         start = daterange[0]
         end = daterange[-1]
         mdict = {}
@@ -169,7 +167,7 @@ class MIRA2FindAndMake:
                         "ss": retrieval["retrieval_ss"][()][0:41],
                         "x": retrieval["x"][()][0:41],
                         "apriori": retrieval["vmr_field"][()][0, :, 0, 0],
-                        "convergence": convergence
+                        "convergence": convergence,
                     }
 
         sdict = fill_nans(mdict)
@@ -178,7 +176,7 @@ class MIRA2FindAndMake:
         mdict = {
             "product": "mira2",
             "make_date": datetime.now(),
-            "sources": self.retfiles
+            "sources": self.retfiles,
         }
 
         np.save(savepath, sdict, allow_pickle=True)

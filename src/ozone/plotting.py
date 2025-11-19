@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from matplotlib.patches import Rectangle
 from .utils import find_downloads
-from .io import get_simulationdir, get_screendir
 import numpy as np
 
 
@@ -12,12 +11,10 @@ class Plotting:
         self.ddir = find_downloads()
         self.f0_mira2 = 273.051
 
-    def make_fig01(self, figure):
-        filename = get_simulationdir() / f"{figure}.npy"
+    def make_fig01(self, figure, file):
         figname = self.ddir / f"{figure}.pdf"
-        data = np.load(filename, allow_pickle=True).item()
-        xy = {"MIRA2": (self.f0_mira2 - 1, 73),
-              "R2": (190, 62.3), "R3": (229, 57)}
+        data = np.load(file, allow_pickle=True).item()
+        xy = {"MIRA2": (self.f0_mira2 - 1, 73), "R2": (190, 62.3), "R3": (229, 57)}
 
         fig = plt.figure(figsize=(12, 8))
         gs = GridSpec(1, 1)
@@ -65,7 +62,6 @@ class Plotting:
         )
         ax.grid(alpha=0.2)
         fig.savefig(figname, transparent=True)
-        plt.show()
         plt.close()
         self.logger.info(f"Saved Figure 1 in {figname}")
 
