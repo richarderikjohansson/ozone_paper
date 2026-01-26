@@ -1,7 +1,45 @@
 from pathlib import Path
 import numpy as np
 from datetime import datetime
+from dataclasses import dataclass, fields, field
 from .io import get_datadir
+from datetime import date
+from numpy.typing import NDArray
+
+
+@dataclass
+class EdgeData:
+    source: str
+    doy: NDArray
+    date: NDArray
+    pv_out: NDArray
+    pv_mean: NDArray
+    pv_in: NDArray
+    pv_stat: NDArray
+
+
+@dataclass
+class MLSData:
+    source: str
+    dt: NDArray
+    prod: NDArray
+    pgrid: NDArray
+    lon: NDArray
+    lat: NDArray
+    date: NDArray
+    time: NDArray
+
+
+@dataclass
+class MIRA2Data:
+    source: str
+    dt: NDArray
+    prod: NDArray
+    err: NDArray
+    pgrid: NDArray
+    apriori: NDArray
+    date: NDArray
+    time: NDArray
 
 
 def find_downloads() -> Path:
@@ -45,12 +83,9 @@ def fill_nans(mdict: dict) -> dict:
 
     for d in daterange:
         if d not in keys:
-            dtfill = datetime(year=d.year,
-                              month=d.month,
-                              day=d.day,
-                              hour=12,
-                              minute=0,
-                              second=0)
+            dtfill = datetime(
+                year=d.year, month=d.month, day=d.day, hour=12, minute=0, second=0
+            )
             mdict[dtfill] = {k: np.full(s, np.nan) for k, s in shapes.items()}
 
     dict_keys_sorted = sorted(mdict.keys())
@@ -74,3 +109,111 @@ def fill_nan(data: dict, drange: np.ndarray) -> dict:
     dict_keys_sorted = sorted(data.keys())
     sdata = {k: data[k] for k in dict_keys_sorted}
     return sdata
+
+
+def parse_edgefile(file: Path) -> EdgeData:
+    """Function to parse edge data file
+
+    :param file: Path to the edgedata file
+    :return: EdgeData struct
+    """
+    doy = []
+    dt = []
+    pv_out = []
+    pv_mean = []
+    pv_in = []
+    pv_stat = []
+    missing = "*****"
+    daterange = np.load(get_datadir() / "daterange.npy", allow_pickle=True)
+
+    with open(file, "r") as fh:
+        lines = fh.readlines()
+        for i, line in enumerate(lines):
+            data = line.split()
+            if i == 0:
+                continue
+            d = date.strptime(data[1], "%y%m%d")
+            if d not in daterange:
+                continue
+
+            for j, field in enumerate(data):
+                match j:
+                    case 0:
+                        f = int(field)
+                        doy.append(f)
+
+                    case 1:
+                        f = date.strptime(field, "%y%m%d")
+                        dt.append(f)
+
+                    case 5:
+                        if field == missing:
+                            f = np.nan
+                        else:
+                            f = float(field)
+                        pv_out.append(f)
+
+                    case 6:
+                        if field == missing:
+                            f = np.nan
+                        else:
+                            f = float(field)
+                        pv_mean.append(f)
+
+                    case 7:
+                        if field == missing:
+                            f = np.nan
+                        else:
+                            f = float(field)
+                        pv_in.append(f)
+                    case 8:
+                        if field == missing:
+                            f = np.nan
+                        else:
+                            f = float(field)
+                        pv_stat.append(f)
+
+    edgedata = EdgeData(
+        source=str(file),
+        doy=np.array(doy),
+        date=np.array(dt),
+        pv_out=np.array(pv_out),
+        pv_mean=np.array(pv_mean),
+        pv_in=np.array(pv_in),
+        pv_stat=np.array(pv_stat),
+    )
+
+    return edgedata
+
+
+def filter_edgedata(data: EdgeData, severity: int) -> EdgeData:
+    """
+    Filter the edgedata based on the severity, The filtering
+    compares pv_out for 0, pv_mean for 1 and pv_out for 2
+    with pv_stat and if pv_stat is lower that the comparison
+    will that data be excluded
+
+    :param data: edgedata dataclass
+    :param severity: how aggressive the filtering shall be
+    :return: returns the filtered edgedata dataclass
+    """
+    assert severity in [0, 1, 2]
+
+    stat = data.pv_stat
+    match severity:
+        case 0:
+            comparison = data.pv_out
+        case 1:
+            comparison = data.pv_mean
+        case 2:
+            comparison = data.pv_in
+
+    mask = stat >= comparison
+
+    names = [f.name for f in fields(data)]
+    for name in names:
+        if name != "source":
+            arr = getattr(data, name)
+            setattr(data, name, arr[mask])
+
+    return data

@@ -1,4 +1,6 @@
 from pathlib import Path
+from numpy.typing import NDArray
+import numpy as np
 
 
 def get_localdir():
@@ -90,3 +92,32 @@ def get_simulationdir() -> Path:
         simulation.mkdir()
 
     return simulation
+
+
+def get_data_files_root(ext: str):
+    cwd = Path(__file__)
+    parents = cwd.parents
+    for p in parents:
+        root = p / ".git"
+        if root.exists():
+            datadir = root.parent / "data"
+
+    assert datadir.exists()
+    files = datadir.rglob(pattern=f"*.{ext}")
+    return [file for file in files], datadir
+
+
+def get_egdefiles(root: Path) -> NDArray:
+    """Find polarvortex edge files from root,
+
+    This function will recursivly find '.dat' files from root directory
+
+    :param root: starting directory
+    :return:
+    """
+    root = Path(root)
+    assert root.exists() and root.is_dir()
+
+    it = root.rglob("*.dat")
+    files = np.array([file for file in it])
+    return files

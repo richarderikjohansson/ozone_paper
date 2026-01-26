@@ -52,7 +52,7 @@ class MLSFindAndMake:
         if self.name == "T":
             self.name = "Temperature"
         self.loc = (67.84, 20.41)
-        self.radii = 200
+        self.radii = 400
         self.logger = logger
         self.find_mls()
         self.make_mls()

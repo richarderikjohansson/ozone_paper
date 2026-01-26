@@ -1,4 +1,4 @@
-from .io import get_datadir, get_exportdir, get_screendir, get_downloadsdir
+from .io import get_datadir, get_exportdir, get_downloadsdir
 import numpy as np
 import yaml
 from datetime import datetime, time
@@ -17,6 +17,7 @@ class DataScreener:
 
     def find_dataset(self):
         files = [file for file in self.edir.rglob(pattern=f"{self.dataset}*")]
+        print(files)
         files = np.array(files)
 
         assert len(files) > 0, (
