@@ -17,7 +17,6 @@ class DataScreener:
 
     def find_dataset(self):
         files = [file for file in self.edir.rglob(pattern=f"{self.dataset}*")]
-        print(files)
         files = np.array(files)
 
         assert len(files) > 0, (
@@ -31,7 +30,7 @@ class DataScreener:
                 self.dataset_fp = file
 
     def find_screen_file(self):
-        self.screen_fp = self.ddir / f"{self.dataset}.yaml"
+        self.screen_fp = self.ddir / "mira2.yaml"
 
     def read_data(self):
         self.meta = np.load(self.metadata_fp, allow_pickle=True).item()
@@ -162,7 +161,7 @@ class MIRA2Screener:
         day = [time(12 - dday, 0, 0), time(12 + dday, 0, 0)]
         night = [time(2 - dnight, 0, 0), time(2 + dnight, 0, 0)]
 
-        for i, t in enumerate():
+        for i, t in enumerate(tarr):
             dbool = day[0] <= t <= day[-1]
             nbool = night[0] <= t <= night[-1]
             if dbool or nbool:

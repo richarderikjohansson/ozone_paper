@@ -85,14 +85,14 @@ class MIRA2FindAndMake:
     retrieval data.
     """
 
-    def __init__(self, root: str, make: bool, logger):
+    def __init__(self, root: str, make: bool, logger, dataset):
         """Init constructor
 
         Args:
             root: Path to the directory with MIRA2 files
             make: Boolean if files should be created
         """
-        self.KEY = "MIRA2_O3_v_1"
+        self.KEY = dataset
         self.root = Path(root).resolve()
         self.find_mira2()
         self.logger = logger
@@ -149,6 +149,7 @@ class MIRA2FindAndMake:
                 dt = make_datetime(measure)
                 if start <= dt.date() <= end:
                     mdict[dt] = {
+                        "file": np.array([file]),
                         "opacity": measure["opacity"][()],
                         "transmission": measure["transmission"][()],
                         "pmeas": measure["p_grid"][()],
@@ -171,8 +172,8 @@ class MIRA2FindAndMake:
                     }
 
         sdict = fill_nans(mdict)
-        savepath = edir / "mira2.npy"
-        metapath = edir / "mira2.meta.npy"
+        savepath = edir / f"{self.KEY}.npy"
+        metapath = edir / f"{self.KEY}.meta.npy"
         mdict = {
             "product": "mira2",
             "make_date": datetime.now(),

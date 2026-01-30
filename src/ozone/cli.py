@@ -6,6 +6,7 @@ from .parsers import (
     mlsmake_parser,
     screening_parser,
     plotting_parser,
+    match_parser,
 )
 from .logger import get_logger
 from .screening import MIRA2Screener, MLSScreener
@@ -33,6 +34,8 @@ def cli():
                 mlsmake_parser(subparser)
             case "screen":
                 screening_parser(subparser)
+            case "match":
+                match_parser(subparser)
             case "plotting":
                 plotting_parser(subparser)
 
@@ -60,17 +63,15 @@ def cli():
             mlsmake(root=args.root, logger=logger)
 
         case "screen":
-            if args.dataset != "mira2" and args.dataset is not None:
+            mlsdp = ["O3", "H2O", "N2O", "ClO"]
+            datascreen = commands[args.command]
+            if args.dataset is None:
+                logger.error("Please provide a argument for the dataset")
+
+            if args.dataset in mlsdp:
                 mlsmake = commands["mlsmake"]
                 mlsmake(root=args.root, logger=logger)
-            elif args.dataset == "mira2" and args.dataset is not None:
-                m2make = commands["m2make"]
-                m2make(root=args.root, logger=logger, make=True)
-
-            datascreen = commands[args.command]
-            obj = datascreen(dataset=args.dataset, filename=args.filename)
-
-            if obj.meta["product"] != "mira2":
+                obj = datascreen(dataset=args.dataset, filename=args.filename)
                 mlsscreen = MLSScreener(
                     data=obj.data,
                     meta=obj.meta,
@@ -78,13 +79,33 @@ def cli():
                     logger=logger,
                     winter=True,
                 )
-
                 mlsscreen.save_screened_data(filename=args.filename)
+
             else:
+                m2make = commands["m2make"]
+                m2make(root=args.root, logger=logger, make=True, dataset=args.dataset)
+                obj = datascreen(dataset=args.dataset, filename=args.filename)
                 mira2screen = MIRA2Screener(
-                    data=obj.data, meta=obj.meta, screen=obj.screen, logger=logger
+                    data=obj.data,
+                    meta=obj.meta,
+                    screen=obj.screen,
+                    logger=logger,
                 )
                 mira2screen.save_screened_data(filename=args.filename)
+
+        case "match":
+            matching = commands[args.command]
+            if args.mls is None or args.mira2 is None:
+                return logger.error(
+                    "Provide paths to screened MIRA2 and screened MLS files"
+                )
+            mlsfile = Path(args.mls)
+            mira2file = Path(args.mira2)
+
+            if not mlsfile.exists() or not mira2file.exists():
+                logger.error("Check filepaths for the screened MIRA2 and MLS data")
+            else:
+                matching(mira2=mira2file, mls=mlsfile, logger=logger)
 
         case "plotting":
             plotting = commands[args.command]

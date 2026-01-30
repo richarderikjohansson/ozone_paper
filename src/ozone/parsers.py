@@ -32,6 +32,8 @@ def m2make_parser(subparser):
         "--make", action="store_true", help="Whether to create files for each product"
     )
 
+    subparser.add_argument("--dataset", type=str, help="Which retrieval configuration")
+
 
 def mlsmake_parser(subparser):
     subparser.add_argument(
@@ -69,6 +71,15 @@ def screening_parser(subparser):
         type=int,
         default=200,
         help="Whether to create a file for the product",
+    )
+
+
+def match_parser(subparser):
+    subparser.add_argument(
+        "--mira2", type=str, default=None, help="Path to the screened MIRA2 file"
+    )
+    subparser.add_argument(
+        "--mls", type=str, default=None, help="Path to the screened MLS file"
     )
 
 

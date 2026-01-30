@@ -96,9 +96,9 @@ class MLSFindAndMake:
                 for i, _ in enumerate(self.dt):
                     # make sure that only real coords is present
                     if (
-                        self.lat[i] >= -90
+                        self.lat[i] >= 65.5
                         and self.lat[i] <= 90
-                        and self.lon[i] >= -180
+                        and self.lon[i] >= 19
                         and self.lon[i] <= 180
                     ):
                         mls = (self.lat[i], self.lon[i])
