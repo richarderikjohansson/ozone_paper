@@ -7,7 +7,7 @@ from .io import get_exportdir, get_datadir
 from .utils import fill_nans
 
 
-def make_datetime(measure: h5py._hl.group.Group) -> datetime:
+def make_datetime_old(measure: h5py._hl.group.Group) -> datetime:
     """Function to make datetime objects
 
     This function takes the measurement dataset
@@ -55,7 +55,17 @@ def make_datetime(measure: h5py._hl.group.Group) -> datetime:
     ) - timedelta(hours=1)
     delta = end - start
     mid = start + delta / 2
-    return mid
+    return mid, delta
+
+
+def make_datetime_new(measure: h5py._hl.group.Group) -> datetime:
+    start_str = measure["start_date"][()].decode() + measure["start_time"][()].decode()
+    end_str = measure["end_date"][()].decode() + measure["end_time"][()].decode()
+    start = datetime.strptime(start_str, "%Y-%m-%d%H-%M-%S")
+    end = datetime.strptime(end_str, "%Y-%m-%d%H-%M-%S")
+    delta = end - start
+    mid = start + delta / 2
+    return mid, delta
 
 
 def calculate_mr(retrieval: h5py._hl.group.Group) -> np.ndarray:
@@ -146,30 +156,72 @@ class MIRA2FindAndMake:
                 retrieval = f[self.KEY]
                 convergence = retrieval.attrs["convergence"]
 
-                dt = make_datetime(measure)
+                try:
+                    dt, _ = make_datetime_old(measure)
+                except KeyError:
+                    dt, meastime = make_datetime_new(measure)
+
                 if start <= dt.date() <= end:
-                    mdict[dt] = {
-                        "file": np.array([file]),
-                        "opacity": measure["opacity"][()],
-                        "transmission": measure["transmission"][()],
-                        "pmeas": measure["p_grid"][()],
-                        "zmeas": measure["z_field"][()],
-                        "tmeas": measure["t_field"][()],
-                        "meastime": measure["meas_duration"][()],
-                        "yf": retrieval["yf"][()],
-                        "y": retrieval["y"][()],
-                        "residual": retrieval["y"][()] - retrieval["yf"][()],
-                        "f": retrieval["f_backend"][()],
-                        "avk": retrieval["avk"][()][0:41, 0:41],
-                        "mr": calculate_mr(retrieval),
-                        "pgrid": retrieval["p_grid"][()],
-                        "zgrid": retrieval["z_field"][()][:, 0, 0],
-                        "eo": retrieval["retrieval_eo"][()][0:41],
-                        "ss": retrieval["retrieval_ss"][()][0:41],
-                        "x": retrieval["x"][()][0:41],
-                        "apriori": retrieval["vmr_field"][()][0, :, 0, 0],
-                        "convergence": convergence,
-                    }
+                    apriori = retrieval["vmr_field"][()][0, :, 0, 0]
+                    D = np.diag(apriori)
+                    M = 1e6 * D
+                    x = retrieval["x"][()][0:41]
+                    try:
+                        mdict[dt] = {
+                            "file": np.array([file]),
+                            "opacity": measure["opacity"][()],
+                            "transmission": measure["transmission"][()],
+                            "pmeas": measure["p_grid"][()],
+                            "zmeas": measure["z_field"][()],
+                            "tmeas": measure["t_field"][()],
+                            "meastime": measure["meas_duration"][()],
+                            "yf": retrieval["yf"][()],
+                            "y": retrieval["y"][()],
+                            "residual": retrieval["y"][()] - retrieval["yf"][()],
+                            "f": retrieval["f_backend"][()],
+                            "avk": retrieval["avk"][()][0:41, 0:41],
+                            "mr": calculate_mr(retrieval),
+                            "pgrid": retrieval["p_grid"][()],
+                            "zgrid": retrieval["z_field"][()][:, 0, 0],
+                            "eo": retrieval["retrieval_eo"][()][0:41],
+                            "ss": retrieval["retrieval_ss"][()][0:41],
+                            "x": x,
+                            "x_phys": M @ x,
+                            "apriori": apriori,
+                            "convergence": convergence,
+                        }
+                    except KeyError:
+                        mdict[dt] = {
+                            "file": np.array([file]),
+                            "pmeas": measure["p_grid"][()],
+                            "zmeas": measure["z_field"][()],
+                            "tmeas": measure["t_field"][()],
+                            "yf": retrieval["yf"][()],
+                            "y": retrieval["y"][()],
+                            "residual": retrieval["y"][()] - retrieval["yf"][()],
+                            "f": retrieval["f_backend"][()],
+                            "avk": retrieval["avk"][()][0:41, 0:41],
+                            "mr": calculate_mr(retrieval),
+                            "pgrid": retrieval["p_grid"][()],
+                            "zgrid": retrieval["z_field"][()][:, 0, 0],
+                            "eo": retrieval["retrieval_eo"][()][0:41],
+                            "ss": retrieval["retrieval_ss"][()][0:41],
+                            "x": x,
+                            "x_phys": M @ x,
+                            "apriori": apriori,
+                            "convergence": convergence,
+                            "meastime": np.array(meastime),
+                        }
+                        if (
+                            "covmat_ss" in retrieval.keys()
+                            and "covmat_so" in retrieval.keys()
+                        ):
+                            Ss = retrieval["covmat_ss"][()][0:41, 0:41]
+                            So = retrieval["covmat_so"][()][0:41, 0:41]
+                            S = Ss + So
+                            mdict[dt]["Ss"] = Ss
+                            mdict[dt]["So"] = So
+                            mdict[dt]["S_phys"] = M @ S @ M.transpose()
 
         sdict = fill_nans(mdict)
         savepath = edir / f"{self.KEY}.npy"

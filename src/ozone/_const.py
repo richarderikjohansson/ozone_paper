@@ -2,8 +2,20 @@ from .arts import Ycalc
 from .mira2 import MIRA2FindAndMake
 from .analysis import MatchData
 from .mls import MLSFindAndMake
+from .mls import MLSFindAndMakeTracer
 from .screening import DataScreener
 from .plotting import Plotting
+from types import SimpleNamespace
+
+COLORS = SimpleNamespace(
+    {
+        "overlay": "#6c7086",
+        "mantle": "#181825",
+        "red": "#d20f39",
+        "peach": "#fe640b",
+        "blue": "#1e66f5",
+    }
+)
 
 
 def cli_commands():
@@ -15,6 +27,7 @@ def cli_commands():
         "screen": DataScreener,
         "plotting": Plotting,
         "match": MatchData,
+        "tracersmake": MLSFindAndMakeTracer,
     }
 
     desc = {
@@ -24,6 +37,7 @@ def cli_commands():
         "screen": "Used to screen data for either MIRA2 or MLS",
         "match": "Used to match MIRA2 and MLS data. This also interpolates MLS data to a coarser grid and convolves the MLS data with the AK from the MIRA2 retrieval",
         "plotting": "Used to plot figures",
+        "tracersmake": "Create datasets for tracer-tracer reference function",
     }
 
     return commands, desc

@@ -88,3 +88,12 @@ def plotting_parser(subparser):
     subparser.add_argument(
         "--filename", type=str, default=None, help="Filepath for data in figure method"
     )
+
+
+def tracers_parser(subparser):
+    subparser.add_argument(
+        "--root",
+        type=str,
+        default=None,
+        help="MLS directory where product data is located",
+    )

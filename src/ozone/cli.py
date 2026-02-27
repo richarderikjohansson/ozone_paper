@@ -7,6 +7,7 @@ from .parsers import (
     screening_parser,
     plotting_parser,
     match_parser,
+    tracers_parser,
 )
 from .logger import get_logger
 from .screening import MIRA2Screener, MLSScreener
@@ -38,6 +39,8 @@ def cli():
                 match_parser(subparser)
             case "plotting":
                 plotting_parser(subparser)
+            case "tracersmake":
+                tracers_parser(subparser)
 
     args = parser.parse_args()
     logger = get_logger()
@@ -61,6 +64,10 @@ def cli():
         case "mlsmake":
             mlsmake = commands[args.command]
             mlsmake(root=args.root, logger=logger)
+
+        case "tracersmake":
+            tracersmake = commands[args.command]
+            tracersmake(root=args.root, logger=logger)
 
         case "screen":
             mlsdp = ["O3", "H2O", "N2O", "ClO"]

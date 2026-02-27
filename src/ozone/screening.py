@@ -4,6 +4,22 @@ import yaml
 from datetime import datetime, time
 
 
+def screen_MLS_precision(data, dataset):
+    for vals in data.values():
+        precision = vals["precision"]
+        product = vals["l2value"]
+        newprod = []
+        for prec, prod in zip(precision, product):
+            if prec < 0:
+                newprod.append(np.nan)
+            else:
+                newprod.append(prod)
+
+        vals[dataset] = np.array(newprod)
+
+    return data
+
+
 class DataScreener:
     def __init__(self, dataset, filename):
         self.ddir = get_datadir()
@@ -30,7 +46,10 @@ class DataScreener:
                 self.dataset_fp = file
 
     def find_screen_file(self):
-        self.screen_fp = self.ddir / "mira2.yaml"
+        if "mira2".upper() not in self.dataset:
+            self.screen_fp = self.ddir / f"{self.dataset}.yaml"
+        else:
+            self.screen_fp = self.ddir / "mira2.yaml"
 
     def read_data(self):
         self.meta = np.load(self.metadata_fp, allow_pickle=True).item()
@@ -78,30 +97,6 @@ class MLSScreener:
         convergence = self.screen["convergence"]
         self.convergence_mask = self.convergence < convergence
 
-    def _screen_precision(self):
-        msk = []
-        pmin = self.screen["pmin"]
-        pmax = self.screen["pmax"]
-
-        for i, p in enumerate(self.pressure):
-            imax = np.where(p < pmax)[0]
-            imin = np.where(p < pmin)[0]
-
-            if len(imax) > 0 and len(imin) > 0:
-                j = imax[0]
-                k = imin[0]
-                p = self.precision[i]
-                ploc = p[j:k]
-                mask = ploc > self.screen["precision"]
-                if False in mask:
-                    msk.append(False)
-                else:
-                    msk.append(True)
-            else:
-                msk.append(False)
-
-        self.precision_mask = np.array(msk)
-
     def _screen_winter(self):
         start = datetime(2019, 10, 1, 0, 0, 0)
         end = datetime(2020, 5, 1, 0, 0, 0)
@@ -116,20 +111,20 @@ class MLSScreener:
         self._screen_status()
         self._screen_quality()
         self._screen_convergence()
-        self._screen_precision()
+        #        self._screen_precision()
 
         combined_mask = (
             self.status_mask
             & self.quality_mask
             & self.convergence_mask
-            & self.precision_mask
             & self.winter_mask
         )
         screened_dts = self.dt[combined_mask]
         mdict = {dt: self.data[dt] for dt in screened_dts}
-        savepath = get_downloadsdir() / f"{filename}.npy"
         product = self.meta["product"]
-        np.save(savepath, mdict, allow_pickle=True)
+        data = screen_MLS_precision(mdict, product)
+        savepath = get_downloadsdir() / f"{filename}.npy"
+        np.save(savepath, data, allow_pickle=True)
         self.logger.info(f"Screened {product} file saved in {savepath}")
 
 
