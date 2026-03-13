@@ -10,8 +10,6 @@ wheels/
 .venv
 .mypy_cache
 export
-data
 
 # files
 *.pdf
-scripts

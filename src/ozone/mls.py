@@ -98,10 +98,10 @@ class MLSFindAndMake:
                 for i, _ in enumerate(self.dt):
                     # make sure that only real coords is present
                     if (
-                        self.lat[i] >= 65.5
-                        and self.lat[i] <= 90
-                        and self.lon[i] >= 18.5
-                        and self.lon[i] <= 25
+                        #                        self.lat[i] >= 65.5
+                        self.lat[i] <= 90 and self.lat[i] >= -90
+                        #                        and self.lon[i] >= 18.5
+                        #                        and self.lon[i] <= 25
                     ):
                         mls = (self.lat[i], self.lon[i])
                         haversinedist = haversine(
@@ -182,7 +182,7 @@ class MLSFindAndMake:
 
 
 class MLSFindAndMakeTracer:
-    def __init__(self, root, logger, latbound=(90, 78), lonbound=(-180, 180)):
+    def __init__(self, root, logger, latbound=(90, 50), lonbound=(-180, 180)):
         self.root = Path(root).resolve()
         self.tracers = ["O3", "N2O", "ClO", "T"]
         self.latmax = latbound[0]

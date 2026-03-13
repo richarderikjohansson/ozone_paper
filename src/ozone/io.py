@@ -107,6 +107,12 @@ def get_data_files_root(ext: str):
     return [file for file in files], datadir
 
 
+def get_home_data():
+    home = Path.home()
+    ddir = home / "Data" / "ozonepaper"
+    return ddir
+
+
 def get_egdefiles(root: Path) -> NDArray:
     """Find polarvortex edge files from root,
 

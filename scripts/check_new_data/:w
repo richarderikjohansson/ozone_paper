@@ -1,0 +1,22 @@
+from h5py import File
+import matplotlib.pyplot as plt
+from pathlib import Path
+
+
+def read_file(path):
+    with File(path, "r") as handler:
+        data = handler["mira2_data"]
+        dct = {k: v[()] for k, v in data.items()}
+    return dct
+
+
+def find_files():
+    home = Path().home()
+    root = home / "Data/op/"
+    generator = root.rglob(pattern="*.hdf5")
+    files = [file for file in generator]
+    return files
+
+
+files = find_files()
+data = read_file(path=files[0])

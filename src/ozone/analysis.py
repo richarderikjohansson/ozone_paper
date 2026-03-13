@@ -6,7 +6,7 @@ from scipy.interpolate import interp1d
 from numpy.typing import NDArray
 from typing import Dict
 
-from .io import get_downloadsdir, get_egdefiles
+from .io import get_downloadsdir, get_egdefiles, get_datadir
 from .utils import parse_edgefile, filter_edgedata
 from scipy.odr import RealData, Model, ODR
 from types import SimpleNamespace
@@ -325,6 +325,8 @@ def fit_n2o_o3(
     errx: NDArray,
     erry: NDArray,
     filename: str,
+    xmin=None,
+    xmax=None,
 ) -> SimpleNamespace:
     xs = (x - x.mean()) / x.std()
     ys = (y - y.mean()) / y.std()
@@ -349,8 +351,10 @@ def fit_n2o_o3(
         sx=x.std(),
         sy=y.std(),
     )
-
-    xfit = np.linspace(25e-9, 320e-9, 400)
+    if xmin is None or xmax is None:
+        xfit = np.linspace(x.min(), x.max(), 400)
+    else:
+        xfit = np.linspace(xmin, xmax, 400)
     xfit_s = (xfit - x.mean()) / x.std()
     yfit_s = poly4_odr(popt, xfit_s)
     yfit = (y.std() * yfit_s) + y.mean()
@@ -437,111 +441,153 @@ def binning(
     )
 
 
-def match_tracers(start, stop, xdata, ydata):
-    PLEV = 70
+def match_tracers(xdata, ydata):
     ydatapath = get_downloadsdir() / "O3_tracers_screened_matched.npy"
     xdatapath = get_downloadsdir() / "N2O_tracers_screened_matched.npy"
-    edgefp = get_egdefiles("/home/ric/Data/edge")
-    xdt = np.array([dt for dt in xdata])
-    ydt = np.array([dt for dt in ydata])
-    edgedata0 = filter_edgedata(parse_edgefile(edgefp[0]), 2)
-    edgedata1 = filter_edgedata(parse_edgefile(edgefp[1]), 2)
-    edgedata3 = filter_edgedata(parse_edgefile(edgefp[3]), 2)
-    # intersect = sorted(
-    #    list(set(edgedata0.date) & set(edgedata1.date) & set(edgedata3.date))
-    # )
-    intersect = []
-    current = start
+    pressurepath = get_datadir() / "m2pres.npz"
 
-    while current <= stop:
-        intersect.append(current)
-        current += timedelta(days=1)
+    vortexpath = get_downloadsdir() / "dmpdata.npy"
+    vortex = np.load(vortexpath, allow_pickle=True).item()
+    vortexdts = [dt for dt in vortex.keys()]
 
-    if len(xdt) <= len(ydt):
-        mlsdts = xdt
+    # xdt = np.array([dt for dt in xdata])
+    # ydt = np.array([dt for dt in ydata])
+    # intersect = []
+    # current = start
 
-    else:
-        mlsdts = ydt
+    # while current <= stop:
+    #    intersect.append(current)
+    #    current += timedelta(days=1)
 
-    mlsdates = np.array([dt.date() for dt in mlsdts])
+    # if len(xdt) <= len(ydt):
+    #    mlsdts = xdt
+
+    # else:
+    #    mlsdts = ydt
+
+    # mlsdates = np.array([dt.date() for dt in mlsdts])
+
+    # matchx = {}
+    # matchy = {}
+    # xpres = None
+    # ypres = None
+
+    # for d in intersect:
+    #    mlsflag = d in mlsdates
+
+    #    if mlsflag:
+    #        mlsindex = np.where(mlsdates == d)[0]
+    #        mlsk = mlsdts[mlsindex]
+    #        for dt in mlsk:
+    #            try:
+    #                matchy[dt] = ydata[dt]
+    #                matchx[dt] = xdata[dt]
+    #                if xpres is None or ypres is None:
+    #                    xpres = xdata[dt]["pressure"]
+    #                    ypres = ydata[dt]["pressure"]
+    #            except KeyError:
+    #                continue
 
     matchx = {}
     matchy = {}
+    pottemp = {}
+    vortexmask = {}
     xpres = None
     ypres = None
 
-    for d in intersect:
-        mlsflag = d in mlsdates
-
-        if mlsflag:
-            mlsindex = np.where(mlsdates == d)[0]
-            mlsk = mlsdts[mlsindex]
-            for dt in mlsk:
-                try:
-                    matchy[dt] = ydata[dt]
-                    matchx[dt] = xdata[dt]
-                    if xpres is None or ypres is None:
-                        xpres = xdata[dt]["pressure"]
-                        ypres = ydata[dt]["pressure"]
-                except KeyError:
-                    continue
-
-    xmsk = xpres <= PLEV
-    ymsk = ypres <= PLEV
-    xlev = xpres[xmsk][0]
-    ylev = ypres[ymsk][0]
-    xidx = np.where(xpres == xlev)[0][0]
-    yidx = np.where(ypres == ylev)[0][0]
+    for dt in vortexdts:
+        try:
+            matchx[dt] = xdata[dt]
+            matchy[dt] = ydata[dt]
+            pottemp[dt] = vortex[dt]["theta_interp"]
+            vortexmask[dt] = vortex[dt]["edgemask"]
+            if xpres is None or ypres is None:
+                xpres = xdata[dt]["pressure"]
+                ypres = ydata[dt]["pressure"]
+        except KeyError:
+            continue
 
     xdt = np.array([dt for dt in matchx.keys()])
     ydt = np.array([dt for dt in matchy.keys()])
+    if len(xdt) <= len(ydt):
+        dts = xdt
+    else:
+        dts = ydt
 
-    assert np.all([xdt, ydt])
     dts = ydt
-    yval = []
-    yuncert = []
-    xval = []
-    xuncert = []
-    scdts = []
-    coords = []
+    dct = {}
+    # pres_thetas = np.load(pressurepath, allow_pickle=True)
+    # ptarget = pres_thetas["pressure"]
+    ptarget = np.load(pressurepath)["pressure"]
+    logtgt = np.log(ptarget)
 
     for dt in dts:
-        d = dt.date()
-        if start <= d <= stop:
-            # Append O3 values
-            yval.extend(matchy[dt]["O3"][i] for i in [yidx - 2, yidx, yidx + 2])
-            yuncert.extend(
-                matchy[dt]["precision"][i] for i in [yidx - 2, yidx, yidx + 2]
-            )
+        xsource = xpres
+        ysource = ypres
 
-            # Append N2O values
-            xval.extend(matchx[dt]["N2O"][i] for i in [xidx - 1, xidx, xidx + 1])
-            xuncert.extend(
-                matchx[dt]["precision"][i] for i in [xidx - 1, xidx, xidx + 1]
-            )
+        xvalcoarse = matchx[dt]["N2O"]
+        xerrcoarse = matchx[dt]["precision"]
+        yvalcoarse = matchy[dt]["O3"]
+        yerrcoarse = matchy[dt]["precision"]
 
-            # Append corresponding dates
-            lat, lon = matchy["lat"], matchy["lon"]
-            coords.append((lat, lon))
-            scdts.extend([d] * 3)
+        logsrcx = np.log(xsource)
+        logsrcy = np.log(ysource)
 
-    yval = np.array(yval)
-    yuncert = np.array(yuncert)
-    xval = np.array(xval)
-    xuncert = np.array(xuncert)
-    scdts = sorted(scdts)
-    coords = np.array(coords)
+        interpx = interp1d(
+            logsrcx,
+            xvalcoarse,
+            kind="linear",
+            bounds_error=False,
+            fill_value=np.nan,
+        )
+        interperrx = interp1d(
+            logsrcx,
+            xerrcoarse,
+            kind="linear",
+            bounds_error=False,
+            fill_value=np.nan,
+        )
+
+        interpy = interp1d(
+            logsrcy,
+            yvalcoarse,
+            kind="linear",
+            bounds_error=False,
+            fill_value=np.nan,
+        )
+        interperry = interp1d(
+            logsrcy,
+            yerrcoarse,
+            kind="linear",
+            bounds_error=False,
+            fill_value=np.nan,
+        )
+
+        matchx[dt]["N2O_interp"] = interpx(logtgt)
+        matchx[dt]["precision_interp"] = interperrx(logtgt)
+        matchy[dt]["O3_interp"] = interpy(logtgt)
+        matchy[dt]["precision_interp"] = interperry(logtgt)
+
+        vmask = vortexmask[dt]
+        print(ptarget[vmask])
+
+        yval = matchy[dt]["O3_interp"][vmask]
+        yerr = matchy[dt]["precision_interp"][vmask]
+        xval = matchx[dt]["N2O_interp"][vmask]
+        xerr = matchx[dt]["precision_interp"][vmask]
+
+        mask = (yval > 0) & (xval > 0) & (yerr > 0) & (xerr > 0)
+
+        dct[dt] = SimpleNamespace(
+            xval=xval[mask],
+            yval=yval[mask],
+            xerr=xerr[mask],
+            yerr=yerr[mask],
+        )
+
     np.save(xdatapath, matchx, allow_pickle=True)
     np.save(ydatapath, matchy, allow_pickle=True)
-
-    return SimpleNamespace(
-        xval=xval,
-        xerr=xuncert,
-        yval=yval,
-        yerr=yuncert,
-        dts=scdts,
-        coords=coords,
-    )
+    return dct
 
 
 def propagate_uncertainty_mls(data: dict, pmax: int, pmin: int) -> NDArray:
